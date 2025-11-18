@@ -22,10 +22,17 @@
                                 <input type="text" class="form-control" id="hostname" placeholder="ws://localhost:9001" required>
                                 <small class="form-text text-muted">WebSocket URL (e.g., ws://localhost:9001)</small>
                             </div>
+
                             <div class="mb-3">
                                 <label for="topic" class="form-label">Topic</label>
                                 <input type="text" class="form-control" id="topic" required>
                             </div>
+
+                            <div class="mb-3">
+                                <label for="clientId" class="form-label">Client ID</label>
+                                <input type="text" class="form-control" id="clientId" placeholder="auto-generated if empty">
+                            </div>
+
                             <button type="submit" class="btn btn-primary" id="connectBtn">Connect</button>
                             <button type="button" class="btn btn-danger" id="disconnectBtn" style="display:none;">Disconnect</button>
                             <span class="ms-3" id="status"></span>
@@ -54,6 +61,7 @@
         const clearBtn = document.getElementById('clearBtn');
         const hostnameInput = document.getElementById('hostname');
         const topicInput = document.getElementById('topic');
+        const clientIdInput = document.getElementById('clientId');
 
         function updateStatus(message, type = 'info') {
             const colors = {
@@ -70,6 +78,11 @@
             const timestamp = new Date().toLocaleTimeString();
             messageArea.value += `[${timestamp}] ${message}\n`;
             messageArea.scrollTop = messageArea.scrollHeight;
+            // limit to last 20 lines
+            const lines = messageArea.value.split("\n");
+            if (lines.length > 20) {
+                messageArea.value = lines.slice(lines.length - 20).join("\n");
+            }
         }
 
         form.addEventListener('submit', (e) => {
@@ -77,20 +90,29 @@
             
             const hostname = hostnameInput.value.trim();
             const topic = topicInput.value.trim();
+            let clientId = clientIdInput.value.trim();
 
             if (!hostname || !topic) {
                 updateStatus('Please fill in all fields', 'error');
                 return;
             }
 
+            if (!clientId) {
+                clientId = "webclient-" + Math.random().toString(16).substring(2, 10);
+                clientIdInput.value = clientId;
+            }
+
             updateStatus('Connecting...', 'warning');
             
             try {
-                client = mqtt.connect(hostname);
+                client = mqtt.connect(hostname, {
+                    clientId: clientId,
+                    clean: false
+                });
 
                 client.on('connect', () => {
                     updateStatus('Connected', 'success');
-                    addMessage(`Connected to ${hostname}`);
+                    addMessage(`Connected to ${hostname} as ${clientId}`);
                     
                     client.subscribe(topic, (err) => {
                         if (err) {
@@ -106,6 +128,7 @@
                     disconnectBtn.style.display = 'inline-block';
                     hostnameInput.disabled = true;
                     topicInput.disabled = true;
+                    clientIdInput.disabled = true;
                 });
 
                 client.on('message', (topic, message) => {
@@ -124,6 +147,7 @@
                     disconnectBtn.style.display = 'none';
                     hostnameInput.disabled = false;
                     topicInput.disabled = false;
+                    clientIdInput.disabled = false;
                 });
 
             } catch (err) {
