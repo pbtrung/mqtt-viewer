@@ -34,10 +34,25 @@
                         <hr>
 
                         <div class="mb-3">
+                            <label class="form-label">Audio Player</label>
+                            <div class="mb-2">
+                                <input type="text" class="form-control" id="audioUrl" placeholder="https://example.com/stream">
+                                <small class="form-text text-muted">Enter audio stream URL</small>
+                            </div>
+                            <audio id="audioPlayer" controls class="w-100 mb-2">
+                                <source id="audioSource" type="audio/mpeg">
+                                Your browser does not support the audio element.
+                            </audio>
+                            <button type="button" class="btn btn-success btn-primary" id="playBtn">Play Audio</button>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-3">
                             <label for="messageArea" class="form-label">Messages</label>
                             <textarea class="form-control font-monospace" id="messageArea" rows="15" readonly></textarea>
                         </div>
-                        <button type="button" class="btn btn-secondary btn-sm" id="clearBtn">Clear Messages</button>
+                        <button type="button" class="btn btn-secondary" id="clearBtn">Clear Messages</button>
                     </div>
                 </div>
             </div>
@@ -54,6 +69,10 @@
         const clearBtn = document.getElementById('clearBtn');
         const hostnameInput = document.getElementById('hostname');
         const topicInput = document.getElementById('topic');
+        const audioUrlInput = document.getElementById('audioUrl');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const audioSource = document.getElementById('audioSource');
+        const playBtn = document.getElementById('playBtn');
 
         function updateStatus(message, type = 'info') {
             const colors = {
@@ -71,6 +90,22 @@
             messageArea.value += `[${timestamp}] ${message}\n`;
             messageArea.scrollTop = messageArea.scrollHeight;
         }
+
+        playBtn.addEventListener('click', () => {
+            const audioUrl = audioUrlInput.value.trim();
+            if (!audioUrl) {
+                addMessage('Please enter an audio URL');
+                return;
+            }
+            
+            audioSource.src = audioUrl;
+            audioPlayer.load();
+            audioPlayer.play().then(() => {
+                addMessage(`Playing audio from: ${audioUrl}`);
+            }).catch(err => {
+                addMessage(`Failed to play audio: ${err.message}`);
+            });
+        });
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
