@@ -8,12 +8,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.14.1/mqtt.min.js"></script>
 </head>
 <body>
-    <div class="container mt-1 mb-2">
+    <div class="container mt-2 mb-2">
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">MQTT Topic Viewer</h4>
+                        <h4 class="mb-0">MQTT & Audio</h4>
                     </div>
                     <div class="card-body">
                         <form id="mqttForm">
@@ -39,11 +39,10 @@
                                 <input type="text" class="form-control" id="audioUrl" placeholder="https://example.com/stream">
                                 <small class="form-text text-muted">Enter audio stream URL</small>
                             </div>
-                            <audio id="audioPlayer" controls class="w-100 mb-2">
+                            <audio id="audioPlayer" controls class="w-100">
                                 <source id="audioSource" type="audio/mpeg">
                                 Your browser does not support the audio element.
                             </audio>
-                            <button type="button" class="btn btn-success btn-primary" id="playBtn">Play Audio</button>
                         </div>
 
                         <hr>
@@ -72,7 +71,6 @@
         const audioUrlInput = document.getElementById('audioUrl');
         const audioPlayer = document.getElementById('audioPlayer');
         const audioSource = document.getElementById('audioSource');
-        const playBtn = document.getElementById('playBtn');
 
         function updateStatus(message, type = 'info') {
             const colors = {
@@ -91,20 +89,13 @@
             messageArea.scrollTop = messageArea.scrollHeight;
         }
 
-        playBtn.addEventListener('click', () => {
+        audioUrlInput.addEventListener('change', () => {
             const audioUrl = audioUrlInput.value.trim();
-            if (!audioUrl) {
-                addMessage('Please enter an audio URL');
-                return;
+            if (audioUrl) {
+                audioSource.src = audioUrl;
+                audioPlayer.load();
+                addMessage(`Audio URL set: ${audioUrl}`);
             }
-            
-            audioSource.src = audioUrl;
-            audioPlayer.load();
-            audioPlayer.play().then(() => {
-                addMessage(`Playing audio from: ${audioUrl}`);
-            }).catch(err => {
-                addMessage(`Failed to play audio: ${err.message}`);
-            });
         });
 
         form.addEventListener('submit', (e) => {
